@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Booking Cart - Paradise Island</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .cart-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .cart-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .cart-summary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 15px;
+        }
+        .cart-total {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .empty-cart i {
+            font-size: 4rem;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        .status-pending { 
+            background-color: #fff3cd !important; 
+            border-left: 4px solid #ffc107; 
+        }
+        .status-confirmed { 
+            background-color: #d1e7dd !important; 
+            border-left: 4px solid #198754; 
+        }
+        .btn-checkout {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            padding: 12px 30px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ route('home') }}">
+                <i class="fas fa-island-tropical me-2"></i>Paradise Island
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ route('hotels.index') }}">
+                    <i class="fas fa-bed me-1"></i>Hotels
+                </a>
+                <a class="nav-link position-relative" href="{{ route('hotel-bookings.index') }}">
+                    <i class="fas fa-shopping-cart me-1"></i>My Cart
+                    @if($bookings->count() > 0)
+                        <span class="cart-badge">{{ $bookings->count() }}</span>
+                    @endif
+                </a>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>{{ Auth::user()->name }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ route('hotel-bookings.index') }}">
+                            <i class="fas fa-shopping-cart me-2"></i>My Cart
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
+                            <i class="fas fa-user-edit me-2"></i>My Profile
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ route('home') }}"><i class="fas fa-home"></i> Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('hotels.index') }}"><i class="fas fa-bed"></i> Hotels</a></li>
+                <li class="breadcrumb-item active"><i class="fas fa-shopping-cart"></i> My Cart</li>
+            </ol>
+        </nav>
+
+        <!-- Cart Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1><i class="fas fa-shopping-cart me-3"></i>My Booking Cart</h1>
+                <p class="lead text-muted">Review your Paradise Island bookings before checkout</p>
+            </div>
+        </div>
+
+        @if($bookings->count() > 0)
+            <div class="row">
+                <!-- Cart Items -->
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fas fa-bed me-2"></i>Hotel Bookings <span class="badge bg-primary">{{ $bookings->count() }}</span></h5>
+                        </div>
+                        <div class="card-body p-0">
+                            @foreach($bookings as $booking)
+                                <div class="cart-item p-4 m-3 status-{{ $booking->status }}">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    <i class="fas fa-hotel fa-2x text-primary"></i>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="mb-1">{{ $booking->hotel->name }}</h6>
+                                                    <small class="text-muted">{{ ucfirst($booking->room_type) }} Room</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="text-center">
+                                                <div class="fw-bold">{{ $booking->check_in->format('M d') }} - {{ $booking->check_out->format('M d, Y') }}</div>
+                                                <small class="text-muted">{{ $booking->check_in->diffInDays($booking->check_out) }} nights</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <div class="fw-bold">{{ $booking->rooms }} Room{{ $booking->rooms > 1 ? 's' : '' }}</div>
+                                                <small class="text-muted">{{ $booking->guests }} Guest{{ $booking->guests > 1 ? 's' : '' }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <div class="fw-bold text-success">${{ number_format($booking->total_price, 2) }}</div>
+                                                @if($booking->status === 'confirmed')
+                                                    @if(str_contains($booking->special_requests ?? '', 'PAID on'))
+                                                        <span class="badge bg-success">Paid & Confirmed</span>
+                                                    @else
+                                                        <span class="badge bg-info">Confirmed</span>
+                                                    @endif
+                                                @elseif($booking->status === 'pending')
+                                                    <span class="badge bg-warning">Awaiting Payment</span>
+                                                @elseif($booking->status === 'cancelled')
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ ucfirst($booking->status) }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="{{ route('hotel-bookings.show', $booking) }}">
+                                                        <i class="fas fa-eye me-2"></i>View Details
+                                                    </a></li>
+                                                    @if($booking->status === 'pending')
+                                                        <li><a class="dropdown-item text-success" href="#" onclick="payNow({{ $booking->id }})">
+                                                            <i class="fas fa-credit-card me-2"></i>Pay Now
+                                                        </a></li>
+                                                    @endif
+                                                    @if($booking->status !== 'confirmed')
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li><a class="dropdown-item text-danger" href="#" onclick="removeFromCart({{ $booking->id }})">
+                                                            <i class="fas fa-trash me-2"></i>Remove from Cart
+                                                        </a></li>
+                                                    @endif
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if($booking->special_requests)
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <div class="alert alert-info py-2 mb-0">
+                                                    <small><strong>Special Requests:</strong> {{ $booking->special_requests }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cart Summary -->
+                <div class="col-lg-4">
+                    <div class="cart-summary p-4 mb-4">
+                        <h4 class="text-white mb-4"><i class="fas fa-receipt me-2"></i>Order Summary</h4>
+                        
+                        @php
+                            $totalAmount = $bookings->sum('total_price');
+                            $pendingCount = $bookings->where('status', 'pending')->count();
+                            $confirmedCount = $bookings->where('status', 'confirmed')->count();
+                        @endphp
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between text-white-50">
+                                <span>Hotel Bookings ({{ $bookings->count() }})</span>
+                                <span>${{ number_format($totalAmount, 2) }}</span>
+                            </div>
+                        </div>
+                        
+                        <hr class="text-white-50">
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between text-white">
+                                <span class="cart-total">Total Amount</span>
+                                <span class="cart-total">${{ number_format($totalAmount, 2) }}</span>
+                            </div>
+                        </div>
+
+                        @if($pendingCount > 0)
+                            <div class="mb-3">
+                                <div class="alert alert-warning py-2 mb-0">
+                                    <small><i class="fas fa-exclamation-triangle me-1"></i>{{ $pendingCount }} booking{{ $pendingCount > 1 ? 's' : '' }} pending payment</small>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($confirmedCount > 0)
+                            <div class="mb-3">
+                                <div class="alert alert-success py-2 mb-0">
+                                    <small><i class="fas fa-check-circle me-1"></i>{{ $confirmedCount }} booking{{ $confirmedCount > 1 ? 's' : '' }} confirmed</small>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="d-grid gap-2 mt-4">
+                            @if($pendingCount > 0)
+                                <button class="btn btn-checkout btn-lg" onclick="payAllBookings()">
+                                    <i class="fas fa-credit-card me-2"></i>Pay All Pending ({{ $pendingCount }})
+                                </button>
+                            @endif
+                            <a href="{{ route('hotels.index') }}" class="btn btn-outline-light">
+                                <i class="fas fa-plus me-2"></i>Add More Hotels
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Booking Progress -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6><i class="fas fa-list-check me-2"></i>Booking Progress</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-bed text-success fa-lg"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="fw-bold">Hotel Booked ✓</div>
+                                    <small class="text-muted">{{ $bookings->count() }} hotel{{ $bookings->count() > 1 ? 's' : '' }} in cart</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center mb-3 opacity-50">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-ship text-muted fa-lg"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="fw-bold text-muted">Ferry Tickets</div>
+                                    <small class="text-muted">Book after hotel confirmation</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center opacity-50">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-ticket-alt text-muted fa-lg"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="fw-bold text-muted">Theme Park Tickets</div>
+                                    <small class="text-muted">Book after hotel confirmation</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                                                        </div>
+            </div>
+
+            <!-- Ferry Tickets Section -->
+            @if($ferryTickets->count() > 0)
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-ship me-2"></i>Ferry Tickets <span class="badge bg-info">{{ $ferryTickets->count() }}</span></h5>
+                    </div>
+                    <div class="card-body p-0">
+                        @foreach($ferryTickets as $ticket)
+                            <div class="cart-item p-4 m-3 status-{{ $ticket->status }}">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <i class="fas fa-ship fa-2x text-info"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-1">{{ $ticket->ferry->name }}</h6>
+                                                <small class="text-muted">{{ $ticket->ferry->departure_port }} → {{ $ticket->ferry->arrival_port }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <div class="fw-bold">{{ $ticket->travel_date->format('M d, Y') }}</div>
+                                            <small class="text-muted">{{ $ticket->ferry->departure_time }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            <div class="fw-bold">{{ $ticket->passengers }} Passenger{{ $ticket->passengers > 1 ? 's' : '' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            <div class="fw-bold text-success">${{ number_format($ticket->total_price, 2) }}</div>
+                                            @switch($ticket->status)
+                                                @case('confirmed')
+                                                    <span class="badge bg-success">Confirmed</span>
+                                                    @break
+                                                @case('cancelled')
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                    @break
+                                                @case('completed')
+                                                    <span class="badge bg-info">Used</span>
+                                                    @break
+                                                @default
+                                                    <span class="badge bg-secondary">{{ ucfirst($ticket->status) }}</span>
+                                            @endswitch
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="{{ route('ferry-tickets.show', $ticket) }}">
+                                                    <i class="fas fa-eye me-2"></i>View Details
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <!-- Theme Park Tickets Section -->
+            @if($parkTickets->count() > 0)
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-ticket-alt me-2"></i>Theme Park Tickets <span class="badge bg-success">{{ $parkTickets->count() }}</span></h5>
+                    </div>
+                    <div class="card-body p-0">
+                        @foreach($parkTickets as $ticket)
+                            <div class="cart-item p-4 m-3 status-{{ $ticket->status }}">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <i class="fas fa-ticket-alt fa-2x text-success"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-1">{{ $ticket->themePark->name }}</h6>
+                                                <small class="text-muted">Theme Park Entry</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <div class="fw-bold">{{ $ticket->visit_date->format('M d, Y') }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            <div class="fw-bold">{{ $ticket->visitors }} Visitor{{ $ticket->visitors > 1 ? 's' : '' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            <div class="fw-bold text-success">${{ number_format($ticket->total_price, 2) }}</div>
+                                            @switch($ticket->status)
+                                                @case('confirmed')
+                                                    <span class="badge bg-success">Confirmed</span>
+                                                    @break
+                                                @case('cancelled')
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                    @break
+                                                @case('used')
+                                                    <span class="badge bg-info">Used</span>
+                                                    @break
+                                                @default
+                                                    <span class="badge bg-secondary">{{ ucfirst($ticket->status) }}</span>
+                                            @endswitch
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="{{ route('park-tickets.show', $ticket) }}">
+                                                    <i class="fas fa-eye me-2"></i>View Details
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <!-- Beach Event Tickets Section -->
+            @if($beachTickets->count() > 0)
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-umbrella-beach me-2"></i>Beach Event Tickets <span class="badge bg-warning">{{ $beachTickets->count() }}</span></h5>
+                    </div>
+                    <div class="card-body p-0">
+                        @foreach($beachTickets as $ticket)
+                            <div class="cart-item p-4 m-3 status-{{ $ticket->status }}">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <i class="fas fa-umbrella-beach fa-2x text-warning"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-1">{{ $ticket->beachEvent->name }}</h6>
+                                                <small class="text-muted">Beach Event</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <div class="fw-bold">{{ $ticket->beachEvent->start_time->format('M d, Y') }}</div>
+                                            <small class="text-muted">{{ $ticket->beachEvent->start_time->format('g:i A') }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            <div class="fw-bold">{{ $ticket->participants }} Participant{{ $ticket->participants > 1 ? 's' : '' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            <div class="fw-bold text-success">${{ number_format($ticket->total_price, 2) }}</div>
+                                            @switch($ticket->status)
+                                                @case('confirmed')
+                                                    <span class="badge bg-success">Confirmed</span>
+                                                    @break
+                                                @case('cancelled')
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                    @break
+                                                @case('attended')
+                                                    <span class="badge bg-info">Attended</span>
+                                                    @break
+                                                @default
+                                                    <span class="badge bg-secondary">{{ ucfirst($ticket->status) }}</span>
+                                            @endswitch
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="{{ route('beach-tickets.show', $ticket) }}">
+                                                    <i class="fas fa-eye me-2"></i>View Details
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </div>
+
+            <!-- Ferry Tickets Section -->
+            @if($ferryTickets->count() > 0)
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">⛴️ My Ferry Tickets</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Reference</th>
+                                                <th>Ferry</th>
+                                                <th>Travel Date</th>
+                                                <th>Passengers</th>
+                                                <th>Passenger Names</th>
+                                                <th>Total Price</th>
+                                                <th>Status</th>
+                                                <th>Booked</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($ferryTickets as $ticket)
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ $ticket->booking_reference }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <strong>{{ $ticket->ferry->name }}</strong><br>
+                                                        <small class="text-muted">{{ $ticket->ferry->departure_port }} → {{ $ticket->ferry->arrival_port }}</small>
+                                                    </td>
+                                                    <td>{{ \Carbon\Carbon::parse($ticket->travel_date)->format('M d, Y') }}</td>
+                                                    <td>{{ $ticket->passengers }}</td>
+                                                    <td>
+                                                        @php
+                                                            $names = json_decode($ticket->passenger_names, true);
+                                                        @endphp
+                                                        @if($names)
+                                                            <ul class="list-unstyled mb-0">
+                                                                @foreach($names as $name)
+                                                                    <li><small>{{ $name }}</small></li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @endif
+                                                    </td>
+                                                    <td>${{ number_format($ticket->total_price, 2) }}</td>
+                                                    <td>
+                                                        @switch($ticket->status)
+                                                            @case('confirmed')
+                                                                <span class="badge bg-success">Confirmed</span>
+                                                                @break
+                                                            @case('cancelled')
+                                                                <span class="badge bg-danger">Cancelled</span>
+                                                                @break
+                                                            @case('completed')
+                                                                <span class="badge bg-info">Completed</span>
+                                                                @break
+                                                            @default
+                                                                <span class="badge bg-secondary">{{ ucfirst($ticket->status) }}</span>
+                                                        @endswitch
+                                                    </td>
+                                                    <td>{{ $ticket->created_at->format('M d, Y') }}</td>
+                                                    <td>
+                                                        <a href="{{ route('ferries.show', $ticket->ferry) }}" class="btn btn-sm btn-outline-primary">View Ferry</a>
+                                                        @if($ticket->status == 'confirmed' && $ticket->travel_date > now()->toDateString())
+                                                            <form action="{{ route('ferry-tickets.cancel', $ticket) }}" method="POST" class="d-inline mt-1" onsubmit="return confirm('Are you sure you want to cancel this ferry ticket?')">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                                            </form>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Park Tickets Section -->
+            @if($parkTickets->count() > 0)
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">🎢 My Theme Park Tickets</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Reference</th>
+                                                <th>Theme Park</th>
+                                                <th>Visit Date</th>
+                                                <th>Visitors</th>
+                                                <th>Total Price</th>
+                                                <th>Status</th>
+                                                <th>Booked</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($parkTickets as $ticket)
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ $ticket->ticket_reference }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <strong>{{ $ticket->themePark->name }}</strong><br>
+                                                        <small class="text-muted">{{ $ticket->themePark->location }}</small>
+                                                    </td>
+                                                    <td>{{ \Carbon\Carbon::parse($ticket->visit_date)->format('M d, Y') }}</td>
+                                                    <td>{{ $ticket->visitors }}</td>
+                                                    <td>${{ number_format($ticket->total_price, 2) }}</td>
+                                                    <td>
+                                                        @switch($ticket->status)
+                                                            @case('confirmed')
+                                                                <span class="badge bg-success">Confirmed</span>
+                                                                @break
+                                                            @case('cancelled')
+                                                                <span class="badge bg-danger">Cancelled</span>
+                                                                @break
+                                                            @case('used')
+                                                                <span class="badge bg-info">Used</span>
+                                                                @break
+                                                            @default
+                                                                <span class="badge bg-secondary">{{ ucfirst($ticket->status) }}</span>
+                                                        @endswitch
+                                                    </td>
+                                                    <td>{{ $ticket->created_at->format('M d, Y') }}</td>
+                                                    <td>
+                                                        <a href="{{ route('theme-parks.show', $ticket->themePark) }}" class="btn btn-sm btn-outline-primary">View Park</a>
+                                                        @if($ticket->status == 'confirmed' && $ticket->visit_date > now()->toDateString())
+                                                            <form action="{{ route('park-tickets.cancel', $ticket) }}" method="POST" class="d-inline mt-1" onsubmit="return confirm('Are you sure you want to cancel this theme park ticket?')">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                                            </form>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Activity Tickets Section -->
+            @if($activityTickets->count() > 0)
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">🎮 My Activity Bookings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Reference</th>
+                                                <th>Activity</th>
+                                                <th>Theme Park</th>
+                                                <th>Scheduled Time</th>
+                                                <th>Participants</th>
+                                                <th>Total Price</th>
+                                                <th>Status</th>
+                                                <th>Booked</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($activityTickets as $ticket)
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ $ticket->activity_reference }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <strong>{{ $ticket->parkActivity->name }}</strong><br>
+                                                        <small class="text-muted">{{ ucfirst($ticket->parkActivity->type) }} - {{ $ticket->parkActivity->duration_minutes }}min</small>
+                                                    </td>
+                                                    <td>{{ $ticket->parkActivity->themePark->name }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($ticket->scheduled_time)->format('M d, Y H:i') }}</td>
+                                                    <td>{{ $ticket->participants }}</td>
+                                                    <td>${{ number_format($ticket->total_price, 2) }}</td>
+                                                    <td>
+                                                        @switch($ticket->status)
+                                                            @case('confirmed')
+                                                                <span class="badge bg-success">Confirmed</span>
+                                                                @break
+                                                            @case('cancelled')
+                                                                <span class="badge bg-danger">Cancelled</span>
+                                                                @break
+                                                            @case('used')
+                                                                <span class="badge bg-info">Used</span>
+                                                                @break
+                                                            @default
+                                                                <span class="badge bg-secondary">{{ ucfirst($ticket->status) }}</span>
+                                                        @endswitch
+                                                    </td>
+                                                    <td>{{ $ticket->created_at->format('M d, Y') }}</td>
+                                                    <td>
+                                                        <a href="{{ route('theme-parks.show', $ticket->parkActivity->themePark) }}" class="btn btn-sm btn-outline-primary">View Park</a>
+                                                        @if($ticket->status == 'confirmed' && $ticket->scheduled_time > now()->addHour())
+                                                            <form action="{{ route('activity-tickets.cancel', $ticket) }}" method="POST" class="d-inline mt-1" onsubmit="return confirm('Are you sure you want to cancel this activity booking?')">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                                            </form>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Beach Tickets Section -->
+            @if($beachTickets->count() > 0)
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">🏖️ My Beach Event Bookings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Reference</th>
+                                                <th>Event</th>
+                                                <th>Type</th>
+                                                <th>Event Date</th>
+                                                <th>Time</th>
+                                                <th>Participants</th>
+                                                <th>Total Price</th>
+                                                <th>Status</th>
+                                                <th>Booked</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($beachTickets as $ticket)
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ $ticket->ticket_reference }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <strong>{{ $ticket->beachEvent->name }}</strong><br>
+                                                        <small class="text-muted">📍 {{ $ticket->beachEvent->location }}</small>
+                                                    </td>
+                                                    <td>
+                                                        @php
+                                                            $badgeClass = match($ticket->beachEvent->type) {
+                                                                'sports' => 'bg-info',
+                                                                'music' => 'bg-warning',
+                                                                'adventure' => 'bg-success',
+                                                                'cultural' => 'bg-purple',
+                                                                'dining' => 'bg-danger',
+                                                                default => 'bg-secondary'
+                                                            };
+                                                        @endphp
+                                                        <span class="badge {{ $badgeClass }}">{{ ucfirst($ticket->beachEvent->type) }}</span>
+                                                    </td>
+                                                    <td>{{ \Carbon\Carbon::parse($ticket->beachEvent->start_time)->format('M d, Y') }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($ticket->beachEvent->start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($ticket->beachEvent->end_time)->format('g:i A') }}</td>
+                                                    <td>{{ $ticket->participants }}</td>
+                                                    <td>${{ number_format($ticket->total_price, 2) }}</td>
+                                                    <td>
+                                                        @switch($ticket->status)
+                                                            @case('confirmed')
+                                                                <span class="badge bg-success">Confirmed</span>
+                                                                @break
+                                                            @case('cancelled')
+                                                                <span class="badge bg-danger">Cancelled</span>
+                                                                @break
+                                                            @case('attended')
+                                                                <span class="badge bg-info">Attended</span>
+                                                                @break
+                                                            @default
+                                                                <span class="badge bg-secondary">{{ ucfirst($ticket->status) }}</span>
+                                                        @endswitch
+                                                    </td>
+                                                    <td>{{ $ticket->created_at->format('M d, Y') }}</td>
+                                                    <td>
+                                                        <a href="{{ route('beach-events.index') }}" class="btn btn-sm btn-outline-primary">View Events</a>
+                                                        @if($ticket->status == 'confirmed' && \Carbon\Carbon::parse($ticket->beachEvent->start_time)->isFuture())
+                                                            <form action="{{ route('beach-tickets.destroy', $ticket) }}" method="POST" class="d-inline mt-1" onsubmit="return confirm('Are you sure you want to cancel this beach event booking?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                                            </form>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @php
+                $hasActiveHotelBooking = $bookings->where('status', 'confirmed')->count() > 0;
+            @endphp
+
+            @if($hasActiveHotelBooking)
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6>🎉 Unlocked Services</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>With your confirmed hotel booking, you now have access to:</p>
+                                <ul>
+                                    <li>⛴️ <a href="{{ route('ferries.index') }}">Ferry Services</a></li>
+                                    <li>🎢 <a href="{{ route('theme-parks.index') }}">Theme Parks</a></li>
+                                    <li>🎫 Park Activities and Rides</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>🏖️ Always Available</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>These services don't require hotel booking:</p>
+                                <ul>
+                                    <li>🏖️ <a href="{{ route('beach-events.index') }}">Beach Events</a></li>
+                                    <li>🗺️ <a href="{{ route('map') }}">Island Map</a></li>
+                                    <li>🏨 <a href="{{ route('hotels.index') }}">Hotel Browsing</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h6>ℹ️ Book a Hotel to Unlock More Services</h6>
+                            <p class="mb-0">Make a confirmed hotel booking to access ferry services and theme parks! <a href="{{ route('hotels.index') }}">Browse Hotels</a></p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+        @else
+            <!-- Empty Cart -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3 class="mb-3">Your Cart is Empty</h3>
+                        <p class="lead text-muted mb-4">Start your Paradise Island adventure by adding some hotels to your cart!</p>
+                        <a href="{{ route('hotels.index') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-bed me-2"></i>Browse Hotels
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Start Guide -->
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <i class="fas fa-bed fa-3x text-primary"></i>
+                            </div>
+                            <h5>🏨 Step 1: Book a Hotel</h5>
+                            <p>Start with a hotel booking on Paradise Island</p>
+                            <a href="{{ route('hotels.index') }}" class="btn btn-primary">View Hotels</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center opacity-50">
+                        <div class="card-body">
+                            <h5>⛴️ Step 2: Ferry to Theme Park</h5>
+                            <p>Book ferry tickets to the theme park island</p>
+                            <button class="btn btn-secondary" disabled>Requires Hotel Booking</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center opacity-50">
+                        <div class="card-body">
+                            <h5>🎢 Step 3: Theme Park Fun</h5>
+                            <p>Experience thrilling rides and attractions</p>
+                            <button class="btn btn-secondary" disabled>Requires Hotel Booking</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <a href="{{ route('dashboard') }}" class="btn btn-outline-primary">← Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="paymentModalLabel">
+                        <i class="fas fa-credit-card me-2"></i>Complete Your Payment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Payment Summary -->
+                        <div class="col-md-5">
+                            <h6 class="mb-3"><i class="fas fa-receipt me-2"></i>Order Summary</h6>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div id="payment-summary-content">
+                                        <!-- Dynamic content will be inserted here -->
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Total Amount:</span>
+                                        <span class="text-success" id="payment-total">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Form -->
+                        <div class="col-md-7">
+                            <h6 class="mb-3"><i class="fas fa-lock me-2"></i>Payment Information</h6>
+                            <form id="paymentForm">
+                                <div class="mb-3">
+                                    <label for="cardName" class="form-label">Cardholder Name</label>
+                                    <input type="text" class="form-control" id="cardName" placeholder="John Doe" value="Test User">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="cardNumber" class="form-label">Card Number</label>
+                                    <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" value="4111 1111 1111 1111" maxlength="19">
+                                    <div class="form-text">
+                                        <i class="fab fa-cc-visa me-1"></i>
+                                        <i class="fab fa-cc-mastercard me-1"></i>
+                                        <i class="fab fa-cc-amex me-1"></i>
+                                        We accept all major credit cards
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="expiryDate" class="form-label">Expiry Date</label>
+                                            <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY" value="12/25" maxlength="5">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="cvv" class="form-label">CVV</label>
+                                            <input type="text" class="form-control" id="cvv" placeholder="123" value="123" maxlength="4">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="billingEmail" class="form-label">Billing Email</label>
+                                    <input type="email" class="form-control" id="billingEmail" placeholder="john@example.com" value="{{ Auth::user()->email }}">
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Demo Mode:</strong> This is a simulation. No real payment will be processed.
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="agreeTerms" checked>
+                                    <label class="form-check-label" for="agreeTerms">
+                                        I agree to the <a href="#" class="text-primary">Terms and Conditions</a> and <a href="#" class="text-primary">Privacy Policy</a>
+                                    </label>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-success btn-lg" id="processPaymentBtn">
+                        <i class="fas fa-lock me-2"></i>
+                        <span class="spinner-border spinner-border-sm d-none me-2" id="paymentSpinner"></span>
+                        Pay Now <span id="payment-btn-amount">$0.00</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Cart functionality
+        let currentPaymentData = null;
+
+        function payNow(bookingId) {
+            // Prepare single booking payment
+            currentPaymentData = {
+                type: 'single',
+                bookings: [{
+                    type: 'hotel',
+                    id: bookingId,
+                    amount: 0 // Will be calculated
+                }]
+            };
+
+            // Calculate amount for this booking
+            @if(isset($bookings))
+                @foreach($bookings as $booking)
+                    if ({{ $booking->id }} === bookingId) {
+                        currentPaymentData.bookings[0].amount = {{ $booking->total_price }};
+                        currentPaymentData.bookings[0].name = '{{ $booking->hotel->name }}';
+                    }
+                @endforeach
+            @endif
+
+            showPaymentModal();
+        }
+
+        function payAllBookings() {
+            // Collect all pending booking data
+            const pendingBookings = [];
+            @if(isset($bookings))
+                @foreach($bookings as $booking)
+                    @if($booking->status === 'pending')
+                        pendingBookings.push({
+                            type: 'hotel',
+                            id: {{ $booking->id }},
+                            amount: {{ $booking->total_price }},
+                            name: '{{ $booking->hotel->name }}'
+                        });
+                    @endif
+                @endforeach
+            @endif
+
+            currentPaymentData = {
+                type: 'bulk',
+                bookings: pendingBookings
+            };
+
+            showPaymentModal();
+        }
+
+        function showPaymentModal() {
+            if (!currentPaymentData || currentPaymentData.bookings.length === 0) {
+                alert('No bookings to pay for.');
+                return;
+            }
+
+            // Update payment summary
+            let summaryHtml = '';
+            let totalAmount = 0;
+
+            currentPaymentData.bookings.forEach(booking => {
+                summaryHtml += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">${booking.name}</span>
+                        <span class="small">$${booking.amount.toFixed(2)}</span>
+                    </div>
+                `;
+                totalAmount += booking.amount;
+            });
+
+            document.getElementById('payment-summary-content').innerHTML = summaryHtml;
+            document.getElementById('payment-total').textContent = `$${totalAmount.toFixed(2)}`;
+            document.getElementById('payment-btn-amount').textContent = `$${totalAmount.toFixed(2)}`;
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+        }
+
+        function removeFromCart(bookingId) {
+            if (confirm('Are you sure you want to remove this booking from your cart?')) {
+                // Create a form for DELETE request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/hotel-bookings/${bookingId}`;
+                
+                // Add CSRF token
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+                
+                // Add method override for DELETE
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Payment modal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-refresh cart badge
+            const cartItems = document.querySelectorAll('.cart-item').length;
+            const cartBadges = document.querySelectorAll('.cart-badge');
+            
+            cartBadges.forEach(badge => {
+                if (cartItems > 0) {
+                    badge.textContent = cartItems;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+
+            // Card number formatting
+            document.getElementById('cardNumber').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+                let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+                e.target.value = formattedValue;
+            });
+
+            // Expiry date formatting
+            document.getElementById('expiryDate').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                e.target.value = value;
+            });
+
+            // CVV validation
+            document.getElementById('cvv').addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            });
+
+            // Process payment button
+            document.getElementById('processPaymentBtn').addEventListener('click', function() {
+                const btn = this;
+                const spinner = document.getElementById('paymentSpinner');
+                
+                // Show loading state
+                btn.disabled = true;
+                spinner.classList.remove('d-none');
+                btn.innerHTML = `<i class="fas fa-lock me-2"></i><span class="spinner-border spinner-border-sm me-2"></span>Processing...`;
+
+                // Simulate payment processing delay
+                setTimeout(() => {
+                    processActualPayment();
+                }, 2000);
+            });
+        });
+
+        function processActualPayment() {
+            if (!currentPaymentData) return;
+
+            if (currentPaymentData.type === 'single') {
+                // Process single payment
+                const booking = currentPaymentData.bookings[0];
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/process-payment/hotel/${booking.id}`;
+                
+                // Add CSRF token
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+                
+                document.body.appendChild(form);
+                form.submit();
+            } else {
+                // Process bulk payment
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/process-all-payments';
+                
+                // Add CSRF token
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+                
+                // Add bookings data
+                const bookingsInput = document.createElement('input');
+                bookingsInput.type = 'hidden';
+                bookingsInput.name = 'bookings';
+                bookingsInput.value = JSON.stringify(currentPaymentData.bookings);
+                form.appendChild(bookingsInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>
