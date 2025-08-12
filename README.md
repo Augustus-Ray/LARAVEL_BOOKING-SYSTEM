@@ -56,11 +56,11 @@ The seeder creates these test accounts:
 
 | Role | Email | Password | Description |
 |------|-------|----------|-------------|
-| Admin | admin@paradise.com | password | System administrator |
-| Hotel Owner | hotel@paradise.com | password | Manages hotels |
-| Park Owner | park@paradise.com | password | Manages theme parks |
-| Ferry Operator | ferry@paradise.com | password | Manages ferry services |
-| Event Organizer | events@paradise.com | password | Manages beach events |
+| Admin | admin@paradiseisland.com | admin123 | System administrator |
+| Hotel Owner | hotel@paradiseisland.com | hotel123 | Manages hotels |
+| Park Owner | park@paradiseisland.com | park123 | Manages theme parks |
+| Ferry Operator | ferry@paradiseisland.com | ferry123 | Manages ferry services |
+| Beach Organizer | events@paradiseisland.com | beach123 | Manages beach events |
 | Visitor | visitor@example.com | password | Regular customer |
 
 ## 🏗️ System Architecture
